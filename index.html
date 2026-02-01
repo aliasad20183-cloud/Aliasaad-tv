@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AliAsaad | سينما بلس</title>
+    <meta name="description" content="تطبيق مشاهدة أفلام ومسلسلات مع ميزات تفاعلية">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0891b2">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Plyr Video Player CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; color: #1e293b; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(8, 145, 178, 0.1), 0 2px 4px -1px rgba(8, 145, 178, 0.06); }
+        .plyr--video .plyr__control.plyr__tab-focus,
+        .plyr--video .plyr__control:hover,
+        .plyr--video .plyr__control[aria-expanded=true] { background: #0891b2 !important; }
+        .active-scale:active { transform: scale(0.95); transition: transform 0.1s; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Mood Picker Styles */
+        .mood-btn.selected { background-color: #0891b2; color: white; border-color: #0891b2; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyan: { 50: '#ecfeff', 100: '#cffafe', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490', 800: '#155e75', 900: '#164e63' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-900 select-none">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass-nav border-b border-slate-200 shadow-sm transition-all duration-300">
+        <div class="px-4 py-3 flex justify-between items-center max-w-7xl mx-auto">
+            <!-- New Logo in Corner -->
+            <div class="flex items-center gap-2 active-scale cursor-pointer" onclick="switchTab('home')">
+                <svg class="w-10 h-10 text-cyan-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.82 2H4.18C2.97 2 2 2.97 2 4.18v15.64C2 21.03 2.97 22 4.18 22h15.64c1.21 0 2.18-.97 2.18-2.18V4.18C22 2.97 21.03 2 19.82 2zm-7.82 14l-5-3.5 5-3.5v7zm5 0l-5-3.5 5-3.5v7z"/>
+                </svg>
+                <div class="flex flex-col">
+                    <h1 class="text-lg font-black text-cyan-700 tracking-tight leading-none">سينما بلس</h1>
+                    <span class="text-[10px] text-slate-500 font-bold tracking-widest">CINEMA+</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="document.getElementById('search-modal').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-cyan-50 hover:text-cyan-600 transition-colors active-scale">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+                <div onclick="switchTab('account')" class="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border border-slate-200 active-scale cursor-pointer">
+                    <img src="https://ui-avatars.com/api/?name=Ali+Asaad&background=0891b2&color=fff" alt="User">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="pt-[80px] pb-24 max-w-7xl mx-auto min-h-screen relative">
+        
+        <!-- HOME TAB (MOVIES) -->
+        <div id="tab-home" class="tab-content active">
+            <!-- Hero Section -->
+            <div id="hero-slider" class="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory px-4 pb-4 mb-4">
+                <div class="w-full h-48 bg-slate-200 rounded-2xl animate-pulse flex-shrink-0 snap-center"></div>
+            </div>
+
+            <!-- Mood Picker (Unique Touch) -->
+            <div class="px-4 mb-8">
+                <h3 class="text-sm font-bold text-slate-500 mb-2 flex items-center gap-2"><i class="fa-solid fa-face-smile text-cyan-600"></i> بماذا تشعر اليوم؟</h3>
+                <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                    <button onclick="filterByMood('happy', this)" class="mood-btn px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-600 whitespace-nowrap active-scale">😂 كوميديا</button>
+                    <button onclick="filterByMood('excited', this)" class="mood-btn px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-600 whitespace-nowrap active-scale">🔥 أكشن</button>
+                    <button onclick="filterByMood('sad', this)" class="mood-btn px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-600 whitespace-nowrap active-scale">😢 دراما</button>
+                    <button onclick="filterByMood('scared', this)" class="mood-btn px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-600 whitespace-nowrap active-scale">😱 رعب</button>
+                </div>
+            </div>
+
+            <div id="movies-container" class="space-y-8"></div>
+        </div>
+
+        <!-- SERIES TAB -->
+        <div id="tab-series" class="tab-content">
+            <div class="px-4 mb-4">
+                <h2 class="text-2xl font-bold text-slate-800">المسلسلات</h2>
+                <p class="text-slate-500 text-sm">أحدث الحلقات والمسلسلات العالمية</p>
+            </div>
+            <div id="series-container" class="space-y-8"></div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="tab-history" class="tab-content">
+            <div class="px-4">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">سجل المشاهدة</h2>
+                    <button onclick="clearHistory()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1 rounded-full">مسح السجل</button>
+                </div>
+                <div id="history-list" class="space-y-4">
+                    <!-- History items injected here -->
+                    <div class="text-center text-slate-400 py-10">
+                        <i class="fa-solid fa-clock-rotate-left text-4xl mb-2 opacity-30"></i>
+                        <p>لا يوجد سجل مشاهدة بعد</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCOUNT TAB -->
+        <div id="tab-account" class="tab-content">
+            <div class="px-4 py-6">
+                <div class="bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-3xl p-6 text-white shadow-lg shadow-cyan-200 mb-8 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                    <div class="relative z-10 flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 flex items-center justify-center text-2xl font-bold">A</div>
+                        <div>
+                            <h2 class="text-xl font-bold">Ali Asaad</h2>
+                            <p class="text-cyan-100 text-sm">عضو مميز VIP</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-between bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+                        <div class="text-center">
+                            <span class="block text-xl font-bold" id="stats-watched">0</span>
+                            <span class="text-xs text-cyan-100">مشاهدة</span>
+                        </div>
+                        <div class="text-center border-x border-white/20 px-6">
+                            <span class="block text-xl font-bold" id="stats-likes">0</span>
+                            <span class="text-xs text-cyan-100">إعجاب</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-xl font-bold" id="stats-reviews">0</span>
+                            <span class="text-xs text-cyan-100">تقييم</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="switchTab('history')" class="w-full bg-white p-4 rounded-xl flex items-center justify-between shadow-sm active-scale">
+                        <span class="font-bold text-slate-700"><i class="fa-solid fa-clock-rotate-left text-cyan-600 ml-3 w-6"></i>سجل المشاهدة</span>
+                        <i class="fa-solid fa-chevron-left text-slate-300"></i>
+                    </button>
+                    <!-- Favorites is handled via bottom nav, but can add here too -->
+                     <button class="w-full bg-white p-4 rounded-xl flex items-center justify-between shadow-sm active-scale">
+                        <span class="font-bold text-slate-700"><i class="fa-solid fa-gear text-cyan-600 ml-3 w-6"></i>الإعدادات</span>
+                        <div class="pointer-events-none text-xs text-slate-400">قريباً</div>
+                    </button>
+                    <div class="mt-8 text-center">
+                         <p class="text-xs text-slate-400">Cinema Plus v2.0.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 z-50 px-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+        <ul class="flex justify-around items-center h-16 max-w-md mx-auto relative">
+            <li onclick="switchTab('home')" class="nav-item active flex flex-col items-center gap-1 w-14 text-cyan-600 cursor-pointer active-scale" data-target="home">
+                <i class="fa-solid fa-film text-xl"></i>
+                <span class="text-[10px] font-bold">أفلام</span>
+            </li>
+            <li onclick="switchTab('series')" class="nav-item flex flex-col items-center gap-1 w-14 text-slate-400 cursor-pointer active-scale" data-target="series">
+                <i class="fa-solid fa-tv text-xl"></i>
+                <span class="text-[10px] font-bold">مسلسلات</span>
+            </li>
+            <li class="nav-item -mt-8 cursor-pointer active-scale" onclick="playRandomMovie()">
+                <div class="w-14 h-14 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-cyan-600/40 border-4 border-slate-50">
+                    <i class="fa-solid fa-play text-xl ml-1"></i>
+                </div>
+            </li>
+            <li onclick="switchTab('history')" class="nav-item flex flex-col items-center gap-1 w-14 text-slate-400 cursor-pointer active-scale" data-target="history">
+                <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+                <span class="text-[10px] font-bold">سجلي</span>
+            </li>
+            <li onclick="switchTab('account')" class="nav-item flex flex-col items-center gap-1 w-14 text-slate-400 cursor-pointer active-scale" data-target="account">
+                <i class="fa-solid fa-user text-xl"></i>
+                <span class="text-[10px] font-bold">حسابي</span>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="fixed inset-0 bg-white z-[60] hidden flex flex-col transition-all duration-300">
+        <div class="flex items-center p-4 border-b border-slate-100">
+            <button onclick="document.getElementById('search-modal').classList.add('hidden')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full">
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <input type="text" id="search-input" placeholder="ابحث عن فيلم أو مسلسل..." class="flex-1 bg-slate-100 border-none rounded-full px-4 py-2 mr-2 focus:ring-2 focus:ring-cyan-500 outline-none text-right">
+        </div>
+        <div id="search-results" class="p-4 overflow-y-auto flex-1 grid grid-cols-2 md:grid-cols-3 gap-4">
+             <div class="col-span-full text-center text-slate-400 mt-10">
+                <i class="fa-solid fa-search text-4xl mb-4 opacity-20"></i>
+                <p>ابدأ الكتابة للبحث...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video & Details Modal -->
+    <div id="videoModal" class="fixed inset-0 z-[100] hidden bg-black flex flex-col overflow-y-auto">
+        <!-- Player Container -->
+        <div class="w-full aspect-video bg-black sticky top-0 z-20">
+             <button onclick="closeModal()" class="absolute top-4 left-4 z-30 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"><i class="fa-solid fa-xmark"></i></button>
+            <video id="player" playsinline controls class="w-full h-full"></video>
+        </div>
+
+        <!-- Details & Interactions -->
+        <div class="flex-1 bg-slate-900 text-white p-4 pb-20">
+            <h1 id="modalTitle" class="text-2xl font-bold mb-2">عنوان الفيلم</h1>
+            <div class="flex items-center gap-3 text-slate-400 text-sm mb-6">
+                <span id="modalYear">2024</span> • <span class="bg-slate-800 px-2 py-0.5 rounded text-white" id="modalRating">8.5</span>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-around mb-8 border-b border-slate-800 pb-6">
+                <button onclick="toggleLike()" id="btn-like" class="flex flex-col items-center gap-1 text-slate-400 active-scale">
+                    <i class="fa-regular fa-heart text-2xl"></i>
+                    <span class="text-xs">إعجاب</span>
+                </button>
+                <button onclick="toggleRate()" id="btn-rate" class="flex flex-col items-center gap-1 text-slate-400 active-scale">
+                    <i class="fa-regular fa-star text-2xl"></i>
+                    <span class="text-xs">تقييم</span>
+                </button>
+                <button class="flex flex-col items-center gap-1 text-slate-400 active-scale">
+                    <i class="fa-solid fa-share-nodes text-2xl"></i>
+                    <span class="text-xs">مشاركة</span>
+                </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-3">التعليقات</h3>
+                <div class="flex gap-2 mb-4">
+                    <input id="comment-input" type="text" placeholder="أضف تعليقك..." class="flex-1 bg-slate-800 border-none rounded-full px-4 py-2 text-sm text-white focus:ring-1 focus:ring-cyan-500 outline-none">
+                    <button onclick="addComment()" class="bg-cyan-600 text-white w-10 h-10 rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+                <div id="comments-list" class="space-y-3">
+                    <!-- Comments -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plyr JS -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    
+    <script>
+        // --- CONFIG ---
+        const TMDB_API_KEY = "6b2dec73b6697866a50cdaef60ccffcb";
+        const IMG_URL = "https://image.tmdb.org/t/p/w500";
+        const BACKDROP_URL = "https://image.tmdb.org/t/p/original";
+        
+        // --- STATE ---
+        let plyrInstance = null;
+        let currentMovieId = null;
+        let currentMovieData = null;
+
+        // --- INIT ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(console.error);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            setupPlayer();
+            loadHome();
+            loadSeries();
+            updateStats();
+            setupSearch();
+        });
+
+        // --- DATA FETCHING ---
+        async function fetchData(endpoint) {
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/${endpoint}&api_key=${TMDB_API_KEY}&language=ar-SA`);
+                const data = await res.json();
+                return data.results || [];
+            } catch (e) {
+                console.error("Fetch Error", e);
+                return [];
+            }
+        }
+
+        async function loadHome() {
+            // Hero Slider (Trending Movies)
+            const trending = await fetchData('trending/movie/week?');
+            renderSlider(trending);
+            
+            // Categories
+            renderSection('movies-container', 'أفلام الأكشن', 'discover/movie?with_genres=28', false);
+            renderSection('movies-container', 'أفلام عائلية', 'discover/movie?with_genres=10751', false);
+            renderSection('movies-container', 'الأعلى تقييماً', 'movie/top_rated?', false);
+        }
+
+        async function loadSeries() {
+            renderSection('series-container', 'مسلسلات رائجة', 'trending/tv/week?', true);
+            renderSection('series-container', 'مسلسلات درامية', 'discover/tv?with_genres=18', true);
+            renderSection('series-container', 'الأنمي', 'discover/tv?with_genres=16', true);
+        }
+
+        function renderSlider(items) {
+            const container = document.getElementById('hero-slider');
+            container.innerHTML = '';
+            items.slice(0, 6).forEach(item => {
+                const img = item.backdrop_path ? BACKDROP_URL + item.backdrop_path : 'https://via.placeholder.com/500x281?text=No+Image';
+                const el = document.createElement('div');
+                el.className = "relative flex-shrink-0 w-[85%] md:w-[60%] lg:w-[40%] aspect-video rounded-2xl overflow-hidden snap-center cursor-pointer shadow-lg group active-scale";
+                el.onclick = () => openMovie(item, false);
+                el.innerHTML = `
+                    <img src="${img}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-5">
+                        <h3 class="text-white text-lg font-black leading-tight mb-1">${item.title || item.name}</h3>
+                        <div class="flex items-center text-slate-300 text-xs gap-3">
+                             <span class="bg-cyan-600 text-white px-1.5 rounded text-[10px]">TOP 10</span>
+                             <span><i class="fa-solid fa-star text-yellow-400"></i> ${item.vote_average?.toFixed(1)}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        async function renderSection(containerId, title, query, isTv) {
+            const items = await fetchData(query);
+            if(items.length === 0) return;
+            
+            const container = document.getElementById(containerId);
+            const section = document.createElement('div');
+            section.innerHTML = `
+                <div class="flex justify-between items-center px-4 mb-3">
+                    <h3 class="text-lg font-bold text-slate-800 border-r-4 border-cyan-600 pr-3">${title}</h3>
+                </div>
+                <div class="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4 snap-x">
+                    ${items.map(item => `
+                        <div onclick='openMovie(${JSON.stringify(item).replace(/'/g, "&#39;")}, ${isTv})' class="relative flex-shrink-0 w-32 md:w-40 snap-start cursor-pointer active-scale">
+                            <div class="aspect-[2/3] rounded-xl overflow-hidden mb-2 card-shadow bg-slate-200">
+                                <img src="${item.poster_path ? IMG_URL + item.poster_path : 'https://via.placeholder.com/150x225'}" class="w-full h-full object-cover" loading="lazy">
+                            </div>
+                            <h4 class="text-slate-800 font-bold text-xs leading-tight line-clamp-1 text-right">${item.title || item.name}</h4>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(section);
+        }
+
+        // --- INTERACTIONS ---
+        function getStorage(key) { return JSON.parse(localStorage.getItem(key) || '{}'); }
+        function setStorage(key, val) { localStorage.setItem(key, JSON.stringify(val)); updateStats(); }
+
+        function openMovie(data, isTv) {
+            currentMovieId = data.id;
+            currentMovieData = data;
+            const modal = document.getElementById('videoModal');
+            
+            // Set Details
+            document.getElementById('modalTitle').innerText = data.title || data.name;
+            document.getElementById('modalYear').innerText = (data.release_date || data.first_air_date || '').substring(0, 4);
+            document.getElementById('modalRating').innerText = data.vote_average?.toFixed(1);
+
+            // Update UI Interactions
+            updateInteractionUI();
+            loadComments();
+
+            // Add to History
+            addToHistory(data, isTv);
+
+            // Setup Player
+            const randomSource = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'; // Placeholder
+            plyrInstance.source = {
+                type: 'video',
+                title: data.title || data.name,
+                poster: data.backdrop_path ? BACKDROP_URL + data.backdrop_path : '',
+                sources: [{ src: randomSource, type: 'video/mp4' }]
+            };
+
+            modal.classList.remove('hidden');
+            // Auto play
+            setTimeout(() => plyrInstance.play(), 500);
+        }
+
+        function addToHistory(data, isTv) {
+            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            // Remove if exists (to move to top)
+            const newHistory = history.filter(h => h.id !== data.id);
+            newHistory.unshift({ ...data, isTv, watchedAt: new Date().toISOString() });
+            localStorage.setItem('watchHistory', JSON.stringify(newHistory.slice(0, 50))); // limit 50
+            updateHistoryTab();
+            updateStats();
+        }
+
+        function updateHistoryTab() {
+            const list = document.getElementById('history-list');
+            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            
+            if (history.length === 0) {
+                list.innerHTML = `<div class="text-center text-slate-400 py-10"><p>لا يوجد سجل</p></div>`;
+                return;
+            }
+
+            list.innerHTML = history.map(item => `
+                <div onclick='openMovie(${JSON.stringify(item).replace(/'/g, "&#39;")}, ${item.isTv})' class="flex gap-3 bg-white p-2 rounded-xl shadow-sm active-scale cursor-pointer">
+                    <img src="${item.poster_path ? IMG_URL + item.poster_path : ''}" class="w-16 h-24 object-cover rounded-lg bg-slate-200">
+                    <div class="flex-1 flex flex-col justify-center">
+                        <h4 class="font-bold text-slate-800">${item.title || item.name}</h4>
+                        <span class="text-xs text-slate-500">${new Date(item.watchedAt).toLocaleDateString('ar-SA')}</span>
+                    </div>
+                    <div class="flex items-center px-2 text-cyan-600"><i class="fa-solid fa-play"></i></div>
+                </div>
+            `).join('');
+        }
+
+        function toggleLike() {
+            const likes = getStorage('likes');
+            if (likes[currentMovieId]) delete likes[currentMovieId];
+            else likes[currentMovieId] = true;
+            setStorage('likes', likes);
+            updateInteractionUI();
+        }
+
+        function toggleRate() {
+            const ratings = getStorage('ratings');
+            // Toggle between 0 (none) and 10 (star) for simplicity, or random
+            ratings[currentMovieId] = ratings[currentMovieId] ? 0 : 10; 
+            setStorage('ratings', ratings);
+            updateInteractionUI();
+        }
+
+        function updateInteractionUI() {
+            const likes = getStorage('likes');
+            const ratings = getStorage('ratings');
+            
+            const likeBtn = document.getElementById('btn-like');
+            const rateBtn = document.getElementById('btn-rate');
+
+            if (likes[currentMovieId]) {
+                likeBtn.classList.replace('text-slate-400', 'text-red-500');
+                likeBtn.querySelector('i').classList.replace('fa-regular', 'fa-solid');
+            } else {
+                likeBtn.classList.replace('text-red-500', 'text-slate-400');
+                likeBtn.querySelector('i').classList.replace('fa-solid', 'fa-regular');
+            }
+
+            if (ratings[currentMovieId]) {
+                rateBtn.classList.replace('text-slate-400', 'text-yellow-400');
+                rateBtn.querySelector('i').classList.replace('fa-regular', 'fa-solid');
+            } else {
+                rateBtn.classList.replace('text-yellow-400', 'text-slate-400');
+                rateBtn.querySelector('i').classList.replace('fa-solid', 'fa-regular');
+            }
+        }
+
+        function addComment() {
+            const input = document.getElementById('comment-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const commentsStore = getStorage('comments');
+            const comments = commentsStore[currentMovieId] || [];
+            comments.unshift({ text, date: new Date().toISOString(), user: 'أنا' });
+            commentsStore[currentMovieId] = comments;
+            setStorage('comments', commentsStore);
+            
+            input.value = '';
+            loadComments();
+        }
+
+        function loadComments() {
+            const commentsStore = getStorage('comments');
+            const list = document.getElementById('comments-list');
+            const comments = commentsStore[currentMovieId] || [];
+            
+            list.innerHTML = comments.map(c => `
+                <div class="bg-slate-800 p-3 rounded-xl">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-xs font-bold text-cyan-400">${c.user}</span>
+                        <span class="text-[10px] text-slate-500">${new Date(c.date).toLocaleTimeString('ar-SA')}</span>
+                    </div>
+                    <p class="text-sm text-slate-300">${c.text}</p>
+                </div>
+            `).join('');
+            
+            if (comments.length === 0) list.innerHTML = '<p class="text-xs text-slate-600 text-center">لا توجد تعليقات. كن أول من يعلق!</p>';
+        }
+
+        function updateStats() {
+            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            const likes = Object.keys(getStorage('likes')).length;
+            const ratings = Object.keys(getStorage('ratings')).length; // crude count
+
+            if(document.getElementById('stats-watched')) {
+                document.getElementById('stats-watched').innerText = history.length;
+                document.getElementById('stats-likes').innerText = likes;
+                document.getElementById('stats-reviews').innerText = ratings;
+            }
+            updateHistoryTab();
+        }
+        
+        function clearHistory() {
+            if(confirm('هل أنت متأكد من مسح السجل؟')) {
+                localStorage.removeItem('watchHistory');
+                updateStats();
+            }
+        }
+
+        // --- UTILS ---
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.getElementById(`tab-${id}`).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(e => {
+                if(e.dataset.target === id) {
+                    e.classList.add('text-cyan-600', 'active'); e.classList.remove('text-slate-400');
+                } else if(e.dataset.target) {
+                    e.classList.remove('text-cyan-600', 'active'); e.classList.add('text-slate-400');
+                }
+            });
+            window.scrollTo({top:0, behavior:'smooth'});
+            if(id === 'history') updateHistoryTab();
+        }
+
+        function closeModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+            plyrInstance.pause();
+        }
+
+        function filterByMood(mood, btn) {
+            // Visual selection
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            
+            // Map mood to genre ID
+            const moodMap = { 'happy': '35', 'excited': '28', 'sad': '18', 'scared': '27' };
+            const genre = moodMap[mood];
+            
+            // Clear current movies and load specific
+            const container = document.getElementById('movies-container');
+            container.innerHTML = '';
+            renderSection('movies-container', `نتائج مزاجك: ${btn.innerText}`, `discover/movie?with_genres=${genre}`, false);
+        }
+
+        function setupSearch() {
+            const input = document.getElementById('search-input');
+            input.addEventListener('input', async (e) => {
+                const query = e.target.value;
+                if(query.length < 2) return;
+                
+                const results = await fetchData(`search/multi?query=${encodeURIComponent(query)}`);
+                const grid = document.getElementById('search-results');
+                
+                grid.innerHTML = results.filter(i => i.poster_path).map(item => `
+                    <div onclick='openMovie(${JSON.stringify(item).replace(/'/g, "&#39;")}, ${item.media_type === 'tv'})' class="cursor-pointer">
+                        <img src="${IMG_URL + item.poster_path}" class="rounded-xl w-full h-auto card-shadow">
+                    </div>
+                `).join('');
+            });
+        }
+        
+        window.playRandomMovie = async function() {
+           const trending = await fetchData('trending/movie/week?');
+           if(trending.length > 0) {
+               const random = trending[Math.floor(Math.random() * trending.length)];
+               openMovie(random, false);
+           }
+        };
+
+        function setupPlayer() {
+            plyrInstance = new Plyr('#player', { controls: ['play', 'progress', 'current-time', 'mute', 'fullscreen'] });
+        }
+    </script>
+</body>
+</html>
